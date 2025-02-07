@@ -1,76 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Text, DateTime, ForeignKey, JSON
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, relationship
-from datetime import datetime
+from db import SessionLocal
+from db import Song, Recording, Annotation
 import json
-
-# Create database engine
-DATABASE_URL = "sqlite:///./database.db"
-engine = create_engine(DATABASE_URL)
-
-# Create declarative base
-Base = declarative_base()
-
-
-# Define the Songs model
-class Song(Base):
-    __tablename__ = "songs"
-    
-    song_id = Column(Integer, primary_key=True)
-    title = Column(String(255), nullable=False)
-    composer = Column(String(255), nullable=False)
-    raaga = Column(String(100), nullable=False)
-    taal = Column(String(100), nullable=False)
-    lyrics = Column(Text, nullable=True)
-    source = Column(String(50), nullable=False)
-    date_added = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
-    # Add relationship to recordings
-    recordings = relationship("Recording", back_populates="song")
-    annotations = relationship("Annotation", back_populates="song")
-
-
-class Recording(Base):
-    __tablename__ = "recordings"
-    
-    recording_id = Column(Integer, primary_key=True)
-    song_id = Column(Integer, ForeignKey('songs.song_id'), nullable=False)
-    file_path = Column(Text, nullable=False)
-    recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    analysis_data = Column(JSON, nullable=True)
-    
-    # Add relationship to song
-    song = relationship("Song", back_populates="recordings")
-
-
-class Annotation(Base):
-    __tablename__ = "annotations"
-    
-    annotation_id = Column(Integer, primary_key=True)
-    song_id = Column(Integer, ForeignKey('songs.song_id'), nullable=False)
-    note_text = Column(Text, nullable=False)
-    timestamp = Column(DateTime, default=datetime.utcnow, nullable=False)
-    
-    # Relationship to song
-    song = relationship("Song", back_populates="annotations")
-
-
-# Create all tables
-Base.metadata.create_all(engine)
-
-
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-# Function to get database session
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
 
 def print_help():
     print("\nAvailable commands:")
@@ -82,7 +12,6 @@ def print_help():
     print("6. list_annotations - List annotations for a song")
     print("7. help - Show this help message")
     print("8. exit - Exit the program")
-
 
 def add_song(db):
     print("\nAdding a new song:")
@@ -104,7 +33,6 @@ def add_song(db):
     db.add(song)
     db.commit()
     print(f"Song '{title}' added successfully with ID: {song.song_id}")
-
 
 def add_recording(db):
     print("\nAdding a new recording:")
@@ -128,7 +56,6 @@ def add_recording(db):
     db.commit()
     print(f"Recording added successfully with ID: {recording.recording_id}")
 
-
 def add_annotation(db):
     print("\nAdding a new annotation:")
     song_id = int(input("Song ID: "))
@@ -142,14 +69,12 @@ def add_annotation(db):
     db.commit()
     print(f"Annotation added successfully with ID: {annotation.annotation_id}")
 
-
 def list_songs(db):
     songs = db.query(Song).all()
     print("\nAll Songs:")
     for song in songs:
         print(f"ID: {song.song_id}, Title: {song.title}, Composer: {song.composer}, "
               f"Raaga: {song.raaga}, Taal: {song.taal}")
-
 
 def list_recordings(db):
     song_id = int(input("Enter song ID: "))
@@ -159,7 +84,6 @@ def list_recordings(db):
         print(f"ID: {rec.recording_id}, File: {rec.file_path}, "
               f"Recorded at: {rec.recorded_at}")
 
-
 def list_annotations(db):
     song_id = int(input("Enter song ID: "))
     annotations = db.query(Annotation).filter(Annotation.song_id == song_id).all()
@@ -167,7 +91,6 @@ def list_annotations(db):
     for ann in annotations:
         print(f"ID: {ann.annotation_id}, Note: {ann.note_text}, "
               f"Timestamp: {ann.timestamp}")
-
 
 def main():
     print("Welcome to the Music Database Manager")
@@ -205,6 +128,5 @@ def main():
     finally:
         db.close()
 
-
 if __name__ == "__main__":
-    main()
+    main() 
