@@ -24,10 +24,12 @@ The system manages three main entities:
    - Useful for marking important aspects of compositions
    - Timestamps all annotations
 
-### Interactive Interface
+### Interactive Interfaces
 
-The system provides a simple command-line interface with the following capabilities:
+The system provides two ways to interact with the database:
 
+#### 1. Command Line Interface
+Access the database through a text-based interface with commands:
 - `add_song`: Add new Carnatic compositions
 - `add_recording`: Link recordings to existing songs
 - `add_annotation`: Add notes or comments to songs
@@ -35,33 +37,54 @@ The system provides a simple command-line interface with the following capabilit
 - `list_recordings`: View recordings for a specific song
 - `list_annotations`: View annotations for a specific song
 
-## Technical Details
+#### 2. Graphical Interface
+A modern GUI browser that provides:
+- Search bar with raaga autocomplete
+- Two-panel view:
+  - Left panel: Songs table with details (title, composer, raaga, taal)
+  - Right panel: Associated recordings for selected song
+- Real-time filtering as you type
+- Responsive layout that adjusts to window size
 
-- Built with SQLAlchemy ORM
-- Uses SQLite database for simple deployment
-- Written in Python
-- Stores data locally in `database.db`
+## Installation
 
-## Usage
+1. Create a Python environment (recommended Python 3.11):
+```bash
+conda create -n carnatic_music python=3.11
+conda activate carnatic_music
+```
 
-1. Install requirements:
+2. Install requirements:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. Run the program:
+## Usage
+
+### Command Line Interface
+Run the REPL interface:
 ```bash
-python main.py
+python repl.py
 ```
 
-3. Use the interactive prompt to manage your Carnatic music collection:
+### Graphical Interface
+Launch the GUI browser:
+```bash
+python gui.py
 ```
-Welcome to the Music Database Manager
-Available commands:
-1. add_song - Add a new song
-2. add_recording - Add a recording to a song
-...
-```
+
+The GUI provides an intuitive way to:
+- Browse songs by raaga using the search bar
+- View all song details in a tabular format
+- See recordings associated with each song
+- Filter results in real-time as you type
+
+## Technical Details
+
+- Built with SQLAlchemy ORM
+- Uses SQLite database for simple deployment
+- GUI built with PyQt6
+- Stores data locally in `database.db`
 
 ## Use Cases
 
@@ -70,6 +93,7 @@ Available commands:
 - Add notes about specific aspects of compositions
 - Keep track of raaga and taal information
 - Document sources of compositions
+- Quickly find songs by raaga using the GUI browser
 
 ## Data Storage
 
