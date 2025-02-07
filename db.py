@@ -18,6 +18,7 @@ class Song(Base):
     composer = Column(String(255), nullable=False)
     raaga = Column(String(100), nullable=False)
     taal = Column(String(100), nullable=False)
+    type_of_song = Column(String(50), nullable=True)  # e.g., Varnam, Kriti, Thillana
     lyrics = Column(Text, nullable=True)
     source = Column(String(50), nullable=False)
     date_added = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -31,6 +32,8 @@ class Recording(Base):
     recording_id = Column(Integer, primary_key=True)
     song_id = Column(Integer, ForeignKey('songs.song_id'), nullable=False)
     file_path = Column(Text, nullable=False)
+    artist = Column(String(255), nullable=True)
+    teacher = Column(String(255), nullable=True)
     recorded_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     analysis_data = Column(JSON, nullable=True)
     
