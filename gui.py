@@ -1,7 +1,28 @@
 from PyQt6.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, 
                             QLineEdit, QTableWidget, QTableWidgetItem, QCompleter)
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QSortFilterProxyModel
 from db import SessionLocal, Song, Recording
+
+class SortableTableWidget(QTableWidget):
+    """Custom TableWidget that supports sorting"""
+    def __init__(self):
+        super().__init__()
+        self.setSortingEnabled(True)  # Enable sorting
+        
+    def setup_sorting(self):
+        """Configure how different columns should be sorted"""
+        self.horizontalHeader().setSectionsClickable(True)
+        # Sort IDs as numbers instead of strings
+        self.id_column = 0  # Assuming ID is always first column
+        self.horizontalHeader().sectionClicked.connect(self.handle_sort)
+    
+    def handle_sort(self, column):
+        """Custom sort handler for specific columns"""
+        if column == self.id_column:
+            # Sort IDs numerically
+            self.sortItems(column, Qt.SortOrder.AscendingOrder if 
+                          self.horizontalHeader().sortIndicatorOrder() == Qt.SortOrder.DescendingOrder 
+                          else Qt.SortOrder.DescendingOrder)
 
 class CarnaticMusicBrowser(QWidget):
     def __init__(self):
@@ -27,20 +48,22 @@ class CarnaticMusicBrowser(QWidget):
         tables_layout = QHBoxLayout()
         
         # Songs table
-        self.songs_table = QTableWidget()
-        self.songs_table.setColumnCount(6)
+        self.songs_table = SortableTableWidget()
+        self.songs_table.setColumnCount(7)
         self.songs_table.setHorizontalHeaderLabels([
-            'ID', 'Title', 'Composer', 'Raaga', 'Taal', 'Source'
+            'ID', 'Title', 'Composer', 'Raaga', 'Taal', 'Type', 'Source'
         ])
+        self.songs_table.setup_sorting()
         self.songs_table.itemSelectionChanged.connect(self.on_song_selected)
         tables_layout.addWidget(self.songs_table)
         
         # Recordings table
-        self.recordings_table = QTableWidget()
-        self.recordings_table.setColumnCount(3)
+        self.recordings_table = SortableTableWidget()
+        self.recordings_table.setColumnCount(5)
         self.recordings_table.setHorizontalHeaderLabels([
-            'ID', 'File Path', 'Recorded At'
+            'ID', 'File Path', 'Artist', 'Teacher', 'Recorded At'
         ])
+        self.recordings_table.setup_sorting()
         tables_layout.addWidget(self.recordings_table)
         
         layout.addLayout(tables_layout)
@@ -59,18 +82,21 @@ class CarnaticMusicBrowser(QWidget):
     def resize_tables(self):
         # Resize songs table columns
         total_width = self.songs_table.width()
-        self.songs_table.setColumnWidth(0, int(total_width * 0.1))  # ID
-        self.songs_table.setColumnWidth(1, int(total_width * 0.3))  # Title
-        self.songs_table.setColumnWidth(2, int(total_width * 0.2))  # Composer
+        self.songs_table.setColumnWidth(0, int(total_width * 0.08))  # ID
+        self.songs_table.setColumnWidth(1, int(total_width * 0.25))  # Title
+        self.songs_table.setColumnWidth(2, int(total_width * 0.17))  # Composer
         self.songs_table.setColumnWidth(3, int(total_width * 0.15))  # Raaga
-        self.songs_table.setColumnWidth(4, int(total_width * 0.15))  # Taal
-        self.songs_table.setColumnWidth(5, int(total_width * 0.1))  # Source
+        self.songs_table.setColumnWidth(4, int(total_width * 0.12))  # Taal
+        self.songs_table.setColumnWidth(5, int(total_width * 0.15))  # Type
+        self.songs_table.setColumnWidth(6, int(total_width * 0.08))  # Source
         
         # Resize recordings table columns
         total_width = self.recordings_table.width()
-        self.recordings_table.setColumnWidth(0, int(total_width * 0.1))  # ID
-        self.recordings_table.setColumnWidth(1, int(total_width * 0.6))  # File Path
-        self.recordings_table.setColumnWidth(2, int(total_width * 0.3))  # Recorded At
+        self.recordings_table.setColumnWidth(0, int(total_width * 0.1))   # ID
+        self.recordings_table.setColumnWidth(1, int(total_width * 0.3))   # File Path
+        self.recordings_table.setColumnWidth(2, int(total_width * 0.2))   # Artist
+        self.recordings_table.setColumnWidth(3, int(total_width * 0.2))   # Teacher
+        self.recordings_table.setColumnWidth(4, int(total_width * 0.2))   # Recorded At
     
     def on_search(self, text):
         # Clear tables
@@ -88,12 +114,17 @@ class CarnaticMusicBrowser(QWidget):
         # Populate songs table
         self.songs_table.setRowCount(len(songs))
         for row, song in enumerate(songs):
-            self.songs_table.setItem(row, 0, QTableWidgetItem(str(song.song_id)))
+            # Create items that can be sorted properly
+            id_item = QTableWidgetItem()
+            id_item.setData(Qt.ItemDataRole.DisplayRole, song.song_id)
+            
+            self.songs_table.setItem(row, 0, id_item)
             self.songs_table.setItem(row, 1, QTableWidgetItem(song.title))
             self.songs_table.setItem(row, 2, QTableWidgetItem(song.composer))
             self.songs_table.setItem(row, 3, QTableWidgetItem(song.raaga))
             self.songs_table.setItem(row, 4, QTableWidgetItem(song.taal))
-            self.songs_table.setItem(row, 5, QTableWidgetItem(song.source))
+            self.songs_table.setItem(row, 5, QTableWidgetItem(song.type_of_song or ''))
+            self.songs_table.setItem(row, 6, QTableWidgetItem(song.source))
     
     def on_song_selected(self):
         self.recordings_table.setRowCount(0)
@@ -112,9 +143,18 @@ class CarnaticMusicBrowser(QWidget):
         # Populate recordings table
         self.recordings_table.setRowCount(len(recordings))
         for row, recording in enumerate(recordings):
-            self.recordings_table.setItem(row, 0, QTableWidgetItem(str(recording.recording_id)))
+            # Create items that can be sorted properly
+            id_item = QTableWidgetItem()
+            id_item.setData(Qt.ItemDataRole.DisplayRole, recording.recording_id)
+            
+            date_item = QTableWidgetItem()
+            date_item.setData(Qt.ItemDataRole.DisplayRole, recording.recorded_at)
+            
+            self.recordings_table.setItem(row, 0, id_item)
             self.recordings_table.setItem(row, 1, QTableWidgetItem(recording.file_path))
-            self.recordings_table.setItem(row, 2, QTableWidgetItem(str(recording.recorded_at)))
+            self.recordings_table.setItem(row, 2, QTableWidgetItem(recording.artist or ''))
+            self.recordings_table.setItem(row, 3, QTableWidgetItem(recording.teacher or ''))
+            self.recordings_table.setItem(row, 4, date_item)
     
     def resizeEvent(self, event):
         super().resizeEvent(event)

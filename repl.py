@@ -19,6 +19,7 @@ def add_song(db):
     composer = input("Composer: ")
     raaga = input("Raaga: ")
     taal = input("Taal: ")
+    type_of_song = input("Type (e.g., Varnam, Kriti, Thillana): ")
     lyrics = input("Lyrics (optional, press enter to skip): ")
     source = input("Source: ")
     
@@ -27,6 +28,7 @@ def add_song(db):
         composer=composer,
         raaga=raaga,
         taal=taal,
+        type_of_song=type_of_song if type_of_song else None,
         lyrics=lyrics if lyrics else None,
         source=source
     )
@@ -38,6 +40,8 @@ def add_recording(db):
     print("\nAdding a new recording:")
     song_id = int(input("Song ID: "))
     file_path = input("File path: ")
+    artist = input("Artist (optional, press enter to skip): ")
+    teacher = input("Teacher (optional, press enter to skip): ")
     analysis_data_str = input("Analysis data (JSON format, press enter to skip): ")
     
     analysis_data = None
@@ -50,6 +54,8 @@ def add_recording(db):
     recording = Recording(
         song_id=song_id,
         file_path=file_path,
+        artist=artist if artist else None,
+        teacher=teacher if teacher else None,
         analysis_data=analysis_data
     )
     db.add(recording)
@@ -82,6 +88,7 @@ def list_recordings(db):
     print(f"\nRecordings for song ID {song_id}:")
     for rec in recordings:
         print(f"ID: {rec.recording_id}, File: {rec.file_path}, "
+              f"Artist: {rec.artist or 'N/A'}, Teacher: {rec.teacher or 'N/A'}, "
               f"Recorded at: {rec.recorded_at}")
 
 def list_annotations(db):
